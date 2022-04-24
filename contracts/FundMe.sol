@@ -10,11 +10,9 @@ contract FundMe {
     address[] public funders;
     address public owner;
 
-    constructor() {
+    constructor(address _priceFeed) {
         owner = msg.sender;
-        priceFeed = AggregatorV3Interface(
-            0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
-        );
+        priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
     modifier ownerModifier() {
@@ -38,6 +36,16 @@ contract FundMe {
         uint256 ethPrice = getLatestPrice();
         uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;
         return ethAmountInUsd;
+    }
+
+    function getEntranceFee() public view returns (uint256) {
+        // minimumUSD
+        uint256 minimumUSD = 50 * 10**18;
+        uint256 price = getLatestPrice();
+        uint256 precision = 1 * 10**18;
+        // return (minimumUSD * precision) / price;
+        // We fixed a rounding error found in the video by adding one!
+        return ((minimumUSD * precision) / price) + 1;
     }
 
     function fund() public payable {
